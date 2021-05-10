@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 using TMPro;
 
@@ -10,14 +11,14 @@ namespace Battlecars.UI
 {
     public class Lobby : MonoBehaviour
     {
-        public string LobbyName => lobbyNameInput.text;
-
         private List<LobbyPlayerSlot> leftTeamSlots = new List<LobbyPlayerSlot>();
         private List<LobbyPlayerSlot> rightTeamSlots = new List<LobbyPlayerSlot>();
 
         [SerializeField] private GameObject leftTeamHolder;
         [SerializeField] private GameObject rightTeamHolder;
-        [SerializeField] private TMP_InputField lobbyNameInput;
+        [SerializeField] private Button readyUpButton;
+        [SerializeField] private Button startGameButton;
+        [SerializeField] private Camera uiCam;
 
         // Flipping bool that determines which column the connected player will be added to
         private bool assigningToLeft = true;
@@ -37,8 +38,11 @@ namespace Battlecars.UI
             bool assigned = false;
 
             // If the player is the localplayer, assign it
-            if(_player.isLocalPlayer) 
+            if(_player.isLocalPlayer && localPlayer == null) 
+            {
                 localPlayer = _player;
+                localPlayer.onMatchStarted.AddListener(OnMatchStarted);
+            }
 
             List<LobbyPlayerSlot> slots = assigningToLeft ? leftTeamSlots : rightTeamSlots;
 
@@ -85,12 +89,55 @@ namespace Battlecars.UI
             // Fill the two lists with their slots
             leftTeamSlots.AddRange(leftTeamHolder.GetComponentsInChildren<LobbyPlayerSlot>());
             rightTeamSlots.AddRange(rightTeamHolder.GetComponentsInChildren<LobbyPlayerSlot>());
+
+            readyUpButton.onClick.AddListener(() =>
+            {
+                BattlecarsPlayerNet player = BattlecarsNetworkManager.Instance.LocalPlayer; 
+                player.SetReady(!player.ready);
+            });
+
+            startGameButton.onClick.AddListener(() => localPlayer.StartMatch());
+        }
+
+        public void OnMatchStarted()
+        {
+            uiCam.enabled = false;
+            gameObject.SetActive(false);
         }
 
         // Update is called once per frame
         void Update()
         {
+            startGameButton.interactable = AllPlayersReady();
+        }
 
+        private bool AllPlayersReady()
+        {
+            int playerCount = 0;
+
+            foreach(LobbyPlayerSlot slot in leftTeamSlots)
+            {
+                if(slot.Player == null)
+                    continue;
+
+                playerCount++;
+
+                if(!slot.Player.ready)
+                    return false;
+            }
+
+            foreach(LobbyPlayerSlot slot in rightTeamSlots)
+            {
+                if(slot.Player == null)
+                    continue;
+
+                playerCount++;
+
+                if(!slot.Player.ready)
+                    return false;
+            }
+
+            return playerCount >= 2 && BattlecarsNetworkManager.Instance.IsHost;
         }
     }
 }

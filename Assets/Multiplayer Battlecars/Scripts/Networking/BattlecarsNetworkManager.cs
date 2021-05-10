@@ -13,6 +13,22 @@ namespace Battlecars.Networking
         /// A reference to the battlecars version of the network manager singleton.
         /// </summary>
         public static BattlecarsNetworkManager Instance => singleton as BattlecarsNetworkManager;
+        public BattlecarsPlayerNet LocalPlayer 
+        {
+            get
+            {
+                foreach(BattlecarsPlayerNet player in players.Values)
+                {
+                    if(player.isLocalPlayer) return player;
+                }
+
+                return null;
+            }
+        }
+
+        public string GameName { get; set; }
+        public string PlayerName { get; set; }
+        public int PlayerCount => players.Count;
 
         /// <summary>
         /// Whether or not this NetworkManager is the host

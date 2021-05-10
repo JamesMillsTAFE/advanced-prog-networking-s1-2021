@@ -15,7 +15,11 @@ namespace Battlecars.UI
     {
         [SerializeField] private Button hostButton;
         [SerializeField] private Button connectButton;
-        [SerializeField] private TextMeshProUGUI ipText;
+        [SerializeField] private TMP_InputField hostNameText;
+        [SerializeField] private TMP_InputField gameNameText;
+        [SerializeField] private GameObject hostConnectionPanel;
+        [SerializeField] private TMP_InputField playerNameText;
+        [SerializeField] private GameObject clientConnectionPanel;
 
         [SerializeField] private DiscoveredGame gameTemplate;
         [SerializeField] private Transform foundGamesHolder;
@@ -27,18 +31,31 @@ namespace Battlecars.UI
         // Start is called before the first frame update
         void Start()
         {
-            hostButton.onClick.AddListener(() => networkManager.StartHost());
-            connectButton.onClick.AddListener(OnClickConnect);
+            hostNameText.onSubmit.AddListener(_value => 
+            {
+                networkManager.PlayerName = _value;
+                gameNameText.interactable = true;
+            });
+
+            gameNameText.onSubmit.AddListener(_value =>
+            {
+                networkManager.GameName = _value;
+                networkManager.StartHost();
+            });
+
+            playerNameText.onSubmit.AddListener(_value =>
+            {
+                networkManager.PlayerName = _value;
+                networkManager.StartClient();
+            });
+
+            hostButton.onClick.AddListener(() => hostConnectionPanel.SetActive(true));
 
             networkManager.discovery.onServerFound.AddListener(OnDetectServer);
             networkManager.discovery.StartDiscovery();
         }
 
-        private void OnClickConnect()
-        {
-            networkManager.networkAddress = ipText.text.Trim((char)8203);
-            networkManager.StartClient();
-        }
+        public void ShowPlayerNameMenu() => clientConnectionPanel.SetActive(true);
 
         private void OnDetectServer(DiscoveryResponse _response)
         {

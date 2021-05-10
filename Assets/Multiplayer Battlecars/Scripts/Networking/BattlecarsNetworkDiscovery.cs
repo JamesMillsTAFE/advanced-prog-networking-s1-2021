@@ -38,6 +38,9 @@ namespace Battlecars.Networking
 
         // The name of the game being sent
         public string gameName;
+        public string hostName;
+        public int playerCount;
+        public int maxPlayers;
     }
 
     [Serializable] public class ServerFoundEvent : UnityEvent<DiscoveryResponse> {}
@@ -54,8 +57,6 @@ namespace Battlecars.Networking
         [Tooltip("Invoked when a server is found")]
         public ServerFoundEvent onServerFound = new ServerFoundEvent();
 
-        private Lobby lobby;
-
         public override void Start()
         {
             ServerId = RandomLong();
@@ -66,12 +67,6 @@ namespace Battlecars.Networking
                 transport = Transport.activeTransport;
 
             base.Start();
-        }
-
-        private void Update()
-        {
-            if(lobby == null)
-                lobby = FindObjectOfType<Lobby>();
         }
 
         /// <summary>
@@ -86,6 +81,8 @@ namespace Battlecars.Networking
         /// <returns>A message containing information about this server</returns>
         protected override DiscoveryResponse ProcessRequest(DiscoveryRequest _request, IPEndPoint _endpoint) 
         {
+            BattlecarsNetworkManager netManager = BattlecarsNetworkManager.Instance;
+
             try
             {
                 // This is just an example reply message,
@@ -95,7 +92,10 @@ namespace Battlecars.Networking
                 {
                     serverId = ServerId,
                     uri = transport.ServerUri(),
-                    gameName = lobby.LobbyName
+                    gameName = netManager.GameName,
+                    hostName = netManager.PlayerName,
+                    maxPlayers = netManager.maxConnections,
+                    playerCount = netManager.PlayerCount
                 };
             }
             catch(NotImplementedException)

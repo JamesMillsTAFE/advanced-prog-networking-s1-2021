@@ -15,6 +15,10 @@ namespace Battlecars.UI
         public string GameName => response.gameName;
 
         [SerializeField] private TextMeshProUGUI ipDisplay;
+        [SerializeField] private TextMeshProUGUI gameName;
+        [SerializeField] private TextMeshProUGUI hostName;
+        [SerializeField] private TextMeshProUGUI playerCount;
+        [SerializeField] private ConnectionMenu connectionMenu;
         
         private BattlecarsNetworkManager networkManager;
         private DiscoveryResponse response;
@@ -31,14 +35,17 @@ namespace Battlecars.UI
         public void UpdateResponse(DiscoveryResponse _response)
         {
             response = _response;
-            ipDisplay.text = $"<b>{response.gameName}</b>\n{response.EndPoint.Address}";
+            gameName.text = $"{response.gameName}";
+            hostName.text = $"{response.hostName}";
+            ipDisplay.text = $"{response.EndPoint.Address}";
+            playerCount.text = $"{response.playerCount} / {response.maxPlayers}";
         }
 
         private void JoinGame()
         {
             // When we click the button, connect to the server displayed on the button
             networkManager.networkAddress = response.EndPoint.Address.ToString();
-            networkManager.StartClient();
+            connectionMenu.ShowPlayerNameMenu();
         }
     }
 }

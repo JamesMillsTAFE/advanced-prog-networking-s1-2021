@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 using Mirror;
@@ -6,18 +7,28 @@ using Mirror;
 using System.Collections;
 
 using Battlecars.UI;
+using Battlecars.Player;
 
 namespace Battlecars.Networking
 {
     public class BattlecarsPlayerNet : NetworkBehaviour
     {
-        [SyncVar]
-        public byte playerId;
-        [SyncVar]
-        public string username = "";
+        [SyncVar] public byte playerId;
+        [SyncVar] public string username = "";
+        [SyncVar] public bool ready = false;
+
+        public UnityEvent onMatchStarted = new UnityEvent();
 
         private Lobby lobby;
         private bool hasJoinedLobby = false;
+
+        public void StartMatch()
+        {
+            if(isLocalPlayer)
+            {
+                CmdStartMatch();
+            }
+        }
 
         public void SetUsername(string _name)
         {
@@ -26,6 +37,16 @@ namespace Battlecars.Networking
                 // Only localplayers can call Commands as localplayers are the only
                 // ones who have the authority to talk to the server
                 CmdSetUsername(_name);
+            }
+        }
+
+        public void SetReady(bool _ready)
+        {
+            if(isLocalPlayer)
+            {
+                // Only localplayers can call Commands as localplayers are the only
+                // ones who have the authority to talk to the server
+                CmdSetReady(_ready);
             }
         }
 
@@ -41,7 +62,11 @@ namespace Battlecars.Networking
         [Command]
         public void CmdSetUsername(string _name) => username = _name;
         [Command]
+        public void CmdSetReady(bool _ready) => ready = _ready;
+        [Command]
         public void CmdAssignPlayerToLobbySlot(bool _left, int _slotId, byte _playerId) => RpcAssignPlayerToLobbySlot(_left, _slotId, _playerId);
+        [Command]
+        public void CmdStartMatch() => RpcStartMatch();
         #endregion
         #region RPCs
         [ClientRpc]
@@ -54,6 +79,19 @@ namespace Battlecars.Networking
 
             // Find the Lobby in the scene and set the player to the correct slot
             StartCoroutine(AssignPlayerToLobbySlotDelayed(BattlecarsNetworkManager.Instance.GetPlayerForId(_playerId), _left, _slotId));
+        }
+
+        [ClientRpc]
+        public void RpcStartMatch()
+        {
+            BattlecarsPlayerNet player = BattlecarsNetworkManager.Instance.LocalPlayer;
+
+            FindObjectOfType<Lobby>().OnMatchStarted();
+            player.GetComponent<PlayerMotor>().Enable();
+
+            Camera camera = player.GetComponentInChildren<Camera>();
+            camera.enabled = true;
+            camera.gameObject.AddComponent<AudioListener>();
         }
         #endregion
         #region Coroutines
@@ -76,7 +114,7 @@ namespace Battlecars.Networking
         // Start is called before the first frame update
         void Start()
         {
-
+            SetUsername(BattlecarsNetworkManager.Instance.PlayerName);
         }
 
         // Update is called once per frame
