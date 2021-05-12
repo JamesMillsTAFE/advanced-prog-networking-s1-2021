@@ -13,13 +13,10 @@ namespace Battlecars.UI
 {
     public class ConnectionMenu : MonoBehaviour
     {
-        [SerializeField] private Button hostButton;
-        [SerializeField] private Button connectButton;
         [SerializeField] private TMP_InputField hostNameText;
         [SerializeField] private TMP_InputField gameNameText;
-        [SerializeField] private GameObject hostConnectionPanel;
         [SerializeField] private TMP_InputField playerNameText;
-        [SerializeField] private GameObject clientConnectionPanel;
+        [SerializeField] private Button hostStartGame;
 
         [SerializeField] private DiscoveredGame gameTemplate;
         [SerializeField] private Transform foundGamesHolder;
@@ -35,27 +32,25 @@ namespace Battlecars.UI
             {
                 networkManager.PlayerName = _value;
                 gameNameText.interactable = true;
+                gameNameText.Select();
             });
 
-            gameNameText.onSubmit.AddListener(_value =>
+            playerNameText.onEndEdit.AddListener(_value => networkManager.PlayerName = _value);
+
+            hostStartGame.onClick.AddListener(() =>
             {
-                networkManager.GameName = _value;
-                networkManager.StartHost();
+                if(!string.IsNullOrEmpty(gameNameText.text) && !string.IsNullOrEmpty(hostNameText.text))
+                {
+                    networkManager.GameName = gameNameText.text;
+                    networkManager.StartHost();
+                }
             });
-
-            playerNameText.onSubmit.AddListener(_value =>
-            {
-                networkManager.PlayerName = _value;
-                networkManager.StartClient();
-            });
-
-            hostButton.onClick.AddListener(() => hostConnectionPanel.SetActive(true));
 
             networkManager.discovery.onServerFound.AddListener(OnDetectServer);
             networkManager.discovery.StartDiscovery();
         }
 
-        public void ShowPlayerNameMenu() => clientConnectionPanel.SetActive(true);
+        public bool IsJoinPlayerNamed() => !string.IsNullOrEmpty(playerNameText.text);
 
         private void OnDetectServer(DiscoveryResponse _response)
         {

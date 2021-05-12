@@ -14,7 +14,6 @@ namespace Battlecars.UI
     {
         public string GameName => response.gameName;
 
-        [SerializeField] private TextMeshProUGUI ipDisplay;
         [SerializeField] private TextMeshProUGUI gameName;
         [SerializeField] private TextMeshProUGUI hostName;
         [SerializeField] private TextMeshProUGUI playerCount;
@@ -37,7 +36,6 @@ namespace Battlecars.UI
             response = _response;
             gameName.text = $"{response.gameName}";
             hostName.text = $"{response.hostName}";
-            ipDisplay.text = $"{response.EndPoint.Address}";
             playerCount.text = $"{response.playerCount} / {response.maxPlayers}";
         }
 
@@ -45,7 +43,10 @@ namespace Battlecars.UI
         {
             // When we click the button, connect to the server displayed on the button
             networkManager.networkAddress = response.EndPoint.Address.ToString();
-            connectionMenu.ShowPlayerNameMenu();
+            if(connectionMenu.IsJoinPlayerNamed())
+            {
+                networkManager.StartClient();
+            }
         }
     }
 }
