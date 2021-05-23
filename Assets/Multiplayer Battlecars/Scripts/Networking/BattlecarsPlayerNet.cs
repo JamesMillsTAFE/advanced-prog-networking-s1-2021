@@ -1,13 +1,11 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
-
 using Mirror;
-
 using System.Collections;
-
 using Battlecars.UI;
 using Battlecars.Player;
+using System;
 
 namespace Battlecars.Networking
 {
@@ -17,6 +15,10 @@ namespace Battlecars.Networking
         [SyncVar] public string username = "";
         [SyncVar] public bool ready = false;
 
+        [SerializeField] private new CameraMotor camera;
+        [SerializeField] private PlayerMotor playerMotor;
+        [SerializeField] private GameObject[] matchObjects;
+
         public UnityEvent onMatchStarted = new UnityEvent();
 
         private Lobby lobby;
@@ -25,9 +27,7 @@ namespace Battlecars.Networking
         public void StartMatch()
         {
             if(isLocalPlayer)
-            {
                 CmdStartMatch();
-            }
         }
 
         public void SetUsername(string _name)
@@ -53,22 +53,28 @@ namespace Battlecars.Networking
         public void AssignPlayerToSlot(bool _left, int _slotId, byte _playerId)
         {
             if(isLocalPlayer)
-            {
                 CmdAssignPlayerToLobbySlot(_left, _slotId, _playerId);
-            }
         }
 
         #region Commands
+
         [Command]
         public void CmdSetUsername(string _name) => username = _name;
+
         [Command]
         public void CmdSetReady(bool _ready) => ready = _ready;
+
         [Command]
-        public void CmdAssignPlayerToLobbySlot(bool _left, int _slotId, byte _playerId) => RpcAssignPlayerToLobbySlot(_left, _slotId, _playerId);
+        public void CmdAssignPlayerToLobbySlot(bool _left, int _slotId, byte _playerId) =>
+            RpcAssignPlayerToLobbySlot(_left, _slotId, _playerId);
+
         [Command]
         public void CmdStartMatch() => RpcStartMatch();
+
         #endregion
+
         #region RPCs
+
         [ClientRpc]
         public void RpcAssignPlayerToLobbySlot(bool _left, int _slotId, byte _playerId)
         {
@@ -78,23 +84,28 @@ namespace Battlecars.Networking
                 return;
 
             // Find the Lobby in the scene and set the player to the correct slot
-            StartCoroutine(AssignPlayerToLobbySlotDelayed(BattlecarsNetworkManager.Instance.GetPlayerForId(_playerId), _left, _slotId));
+            StartCoroutine(AssignPlayerToLobbySlotDelayed(BattlecarsNetworkManager.Instance.GetPlayerForId(_playerId),
+                _left, _slotId));
         }
 
         [ClientRpc]
         public void RpcStartMatch()
         {
+            foreach(GameObject matchObject in matchObjects)
+                matchObject.SetActive(true);
+            
+            LevelManager.LoadLevel("Gameplay");
+            
             BattlecarsPlayerNet player = BattlecarsNetworkManager.Instance.LocalPlayer;
-
             FindObjectOfType<Lobby>().OnMatchStarted();
-            player.GetComponent<PlayerMotor>().Enable();
-
-            Camera camera = player.GetComponentInChildren<Camera>();
-            camera.enabled = true;
-            camera.gameObject.AddComponent<AudioListener>();
+            player.playerMotor.Enable();
+            player.camera.Enable();
         }
+
         #endregion
+
         #region Coroutines
+
         private IEnumerator AssignPlayerToLobbySlotDelayed(BattlecarsPlayerNet _player, bool _left, int _slotId)
         {
             // Keep trying to get the lobby until it's not null
@@ -109,16 +120,23 @@ namespace Battlecars.Networking
             // Lobby successfully got, so assign the player
             lobby.AssignPlayerToSlot(_player, _left, _slotId);
         }
+
         #endregion
 
+        private void Awake()
+        {
+            foreach(GameObject matchObject in matchObjects)
+                matchObject.SetActive(false);
+        }
+
         // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
             SetUsername(BattlecarsNetworkManager.Instance.PlayerName);
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             // Determine if we are on the host client
             if(BattlecarsNetworkManager.Instance.IsHost)
@@ -145,7 +163,7 @@ namespace Battlecars.Networking
         public override void OnStartLocalPlayer()
         {
             // Load the scene with the lobby
-            SceneManager.LoadSceneAsync("InGameMenus", LoadSceneMode.Additive);
+            LevelManager.LoadLevel("InGameMenus");
         }
 
         // Runs when the client is disconnected from the server

@@ -241,6 +241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce116de0c43699b43aed9aed7942f603, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  requiredPlayerCount: 1
   leftTeamHolder: {fileID: 36243043}
   rightTeamHolder: {fileID: 1284500358}
   readyUpButton: {fileID: 914069996}

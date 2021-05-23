@@ -14,6 +14,7 @@ namespace Battlecars.UI
         private List<LobbyPlayerSlot> leftTeamSlots = new List<LobbyPlayerSlot>();
         private List<LobbyPlayerSlot> rightTeamSlots = new List<LobbyPlayerSlot>();
 
+        [SerializeField] private int requiredPlayerCount = 2;
         [SerializeField] private GameObject leftTeamHolder;
         [SerializeField] private GameObject rightTeamHolder;
         [SerializeField] private Button readyUpButton;
@@ -84,7 +85,7 @@ namespace Battlecars.UI
         }
 
         // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
             // Fill the two lists with their slots
             leftTeamSlots.AddRange(leftTeamHolder.GetComponentsInChildren<LobbyPlayerSlot>());
@@ -106,7 +107,7 @@ namespace Battlecars.UI
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             startGameButton.interactable = AllPlayersReady();
         }
@@ -137,7 +138,7 @@ namespace Battlecars.UI
                     return false;
             }
 
-            return playerCount >= 2 && BattlecarsNetworkManager.Instance.IsHost;
+            return playerCount >= requiredPlayerCount && BattlecarsNetworkManager.Instance.IsHost;
         }
     }
 }

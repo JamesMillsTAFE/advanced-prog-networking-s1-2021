@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Battlecars.Player
 {
+    [RequireComponent(typeof(Camera))]
     public class CameraMotor : MonoBehaviour
     {
         [SerializeField] private Transform target;
@@ -12,17 +13,23 @@ namespace Battlecars.Player
 
         private Vector3 velocity = Vector3.zero;
 
+        public void Enable()
+        {
+            Camera camera = gameObject.GetComponent<Camera>();
+            camera.enabled = true;
+        }
+
         // Start is called before the first frame update
         private void Start()
         {
-            transform.position = target.position + offset;
+            transform.localPosition = target.localPosition + offset;
         }
 
         // Update is called once per frame
         private void FixedUpdate()
         {
-            Vector3 position = Vector3.SmoothDamp(transform.position, target.position + offset, ref velocity, damping);
-            transform.position = position;
+            Vector3 position = Vector3.SmoothDamp(transform.localPosition, target.localPosition + offset, ref velocity, damping);
+            transform.localPosition = position;
 
             transform.LookAt(target);
         }
