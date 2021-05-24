@@ -26,6 +26,8 @@ namespace Battlecars.Networking
             }
         }
 
+        public List<BattlecarsPlayerNet> Players => players.Select(p => p.Value).ToList();
+
         public string GameName { get; set; }
         public string PlayerName { get; set; }
         public int PlayerCount => players.Count;

@@ -97,7 +97,7 @@ namespace Battlecars.UI
                 player.SetReady(!player.ready);
             });
 
-            startGameButton.onClick.AddListener(() => localPlayer.StartMatch());
+            startGameButton.onClick.AddListener(() => BattlecarsNetworkManager.Instance.LocalPlayer.StartMatch());
         }
 
         public void OnMatchStarted()
